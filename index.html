@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Naipes</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1>Juego de Naipes</h1>
+            <div id="game-info">
+                <div id="energy-container" style="display: none;">
+                    Energía: <span id="energy">3</span>
+                </div>
+                <div id="score-container">
+                    Puntuación: <span id="score">0</span>
+                </div>
+            </div>
+        </header>
+
+        <div id="preview-container" style="display: none;">
+            <div id="next-piece-preview"></div>
+        </div>
+
+        <div id="game-board"></div>
+
+        <div id="controls">
+            <button id="rotate-button" style="display: none;">Rotar</button>
+            <button id="pause-button" style="display: none;">Pausa</button>
+            <button id="end-button" style="display: none;">Terminar</button>
+        </div>
+    </div>
+
+    <!-- Modal de Bienvenida -->
+    <div id="welcome-modal">
+        <div class="modal-content">
+            <h1>Juego de Naipes</h1>
+            <p><em>Tres modos diferentes para disfrutar</em></p>
+            
+            <div class="game-modes">
+                <div class="mode-section">
+                    <h3>🏗️ Constructor</h3>
+                    <p>
+                        Piezas de cartas caen desde arriba (grupos de 3 o rectángulos de 4).
+                        Podés rotarlas antes de colocarlas. Formá grupos de 3 o más cartas 
+                        vecinas del mismo palo para eliminarlas y ganar puntos.
+                    </p>
+                </div>
+
+                <div class="mode-section">
+                    <h3>⚖️ Espejo</h3>
+                    <p>
+                        El tablero empieza lleno. Intercambiá cartas entre posiciones espejo 
+                        (izquierda con derecha). Cada intercambio cuesta 1 energía. 
+                        Los grupos de 3+ del mismo palo se eliminan solos y restauran energía.
+                    </p>
+                </div>
+
+                <div class="mode-section">
+                    <h3>🌊 Cascada</h3>
+                    <p>
+                        Las cartas caen de una en una desde el centro. Usá las flechas ←→ 
+                        para dirigirlas a la columna que prefieras. Formá grupos vecinos 
+                        del mismo palo para eliminarlos en reacciones en cadena.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mode-buttons">
+                <button id="start-constructor">Constructor</button>
+                <button id="start-espejo">Espejo</button>
+                <button id="start-cascada">Cascada</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Fin de Juego -->
+    <div id="end-game-modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Juego Terminado</h2>
+            <p>Tu puntuación final: <span id="final-score">0</span></p>
+            <div class="mode-buttons">
+                <button id="play-constructor">Constructor</button>
+                <button id="play-espejo">Espejo</button>
+                <button id="play-cascada">Cascada</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
