@@ -193,10 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 slot.dataset.col = c;
                 
                 // Agregar clases especiales según el modo
-                if (gameMode === 'constructor' && canPlacePieceAt(r, c)) {
-                    slot.classList.add('preview');
-                }
-                
                 if (gameMode === 'espejo' && isHighlighted(r, c)) {
                     slot.classList.add('highlight');
                 }
