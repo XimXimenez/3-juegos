@@ -169,7 +169,7 @@ button:disabled {
 }
 
 /* Modal Styles */
-#welcome-modal, #end-game-modal {
+#welcome-modal, #end-game-modal, #leaderboard-modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -263,7 +263,79 @@ button:disabled {
     border-color: #005a9e;
 }
 
+#highscore-form {
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+#highscore-form input {
+    padding: 8px;
+    font-size: 1em;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    width: 80%;
+    max-width: 250px;
+    text-align: center;
+}
+
+#highscore-form button {
+    padding: 8px 16px;
+}
+
+#leaderboard-container {
+    display: flex;
+    justify-content: space-around;
+    gap: 20px;
+    margin: 20px 0;
+    text-align: left;
+}
+
+.leaderboard-column {
+    flex: 1;
+    min-width: 150px;
+}
+
+.leaderboard-column h3 {
+    margin: 0 0 10px 0;
+    font-size: 1em;
+    text-align: center;
+    padding-bottom: 5px;
+    border-bottom: 2px solid var(--accent-color);
+}
+
+.leaderboard-column ol {
+    padding-left: 20px;
+    margin: 0;
+    font-size: 0.9em;
+    list-style-type: decimal;
+}
+
+.leaderboard-column li {
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.leaderboard-column li span:first-child {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
 /* Responsive */
+@media (max-width: 600px) {
+    #leaderboard-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    .leaderboard-column {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+
 @media (max-width: 480px) {
     :root {
         --card-width: 35px;
