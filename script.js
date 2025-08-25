@@ -19,10 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const endGameModal = document.getElementById('end-game-modal');
     const finalScoreElement = document.getElementById('final-score');
     
-    // Botones de modo
-    const startConstructorBtn = document.getElementById('start-constructor');
-    const startEspejoBtn = document.getElementById('start-espejo');
-    const startCascadaBtn = document.getElementById('start-cascada');
+    // Títulos de modo
+    const titleConstructor = document.getElementById('title-constructor');
+    const titleEspejo = document.getElementById('title-espejo');
+    const titleCascada = document.getElementById('title-cascada');
     const playConstructorBtn = document.getElementById('play-constructor');
     const playEspejoBtn = document.getElementById('play-espejo');
     const playCascadaBtn = document.getElementById('play-cascada');
@@ -631,17 +631,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Event Listeners
-    startConstructorBtn.addEventListener('click', () => {
+    titleConstructor.addEventListener('click', () => {
         welcomeModal.style.display = 'none';
         initConstructor();
     });
 
-    startEspejoBtn.addEventListener('click', () => {
+    titleEspejo.addEventListener('click', () => {
         welcomeModal.style.display = 'none';
         initEspejo();
     });
 
-    startCascadaBtn.addEventListener('click', () => {
+    titleCascada.addEventListener('click', () => {
         welcomeModal.style.display = 'none';
         initCascada();
     });
