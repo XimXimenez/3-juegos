@@ -431,29 +431,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function getGridCoordinates(e) {
+        const firstSlot = gameBoard.querySelector('.card-slot');
+        if (!firstSlot) return null;
+
+        const firstSlotRect = firstSlot.getBoundingClientRect();
+        const gridStartX = firstSlotRect.left;
+        const gridStartY = firstSlotRect.top;
+
+        // To get width + gap, we find the distance between two adjacent slots
+        const secondSlot = gameBoard.querySelector('.card-slot:nth-child(2)');
+        const slotWidthPlusGap = secondSlot ? secondSlot.getBoundingClientRect().left - gridStartX : firstSlotRect.width;
+
+        // To get height + gap, we find the distance between a slot and the one below it
+        const slotInNextRow = gameBoard.querySelector(`.card-slot:nth-child(${COLS + 1})`);
+        const slotHeightPlusGap = slotInNextRow ? slotInNextRow.getBoundingClientRect().top - gridStartY : firstSlotRect.height;
+
+        const x = e.clientX - gridStartX;
+        const y = e.clientY - gridStartY;
+
+        const col = Math.floor(x / slotWidthPlusGap);
+        const row = Math.floor(y / slotHeightPlusGap);
+
+        return { col, row, gridStartX, gridStartY, slotWidthPlusGap, slotHeightPlusGap };
+    }
+
     function handleConstructorClick(e) {
         if (!gameRunning || !currentPiece || gameMode !== 'constructor') return;
 
-        const boardRect = gameBoard.getBoundingClientRect();
-        const slotSize = {
-            width: boardRect.width / COLS,
-            height: boardRect.height / ROWS
-        };
+        const coords = getGridCoordinates(e);
+        if (!coords) return;
 
-        // Calcular la posición relativa del cursor dentro del tablero
-        const x = e.clientX - boardRect.left;
-        const y = e.clientY - boardRect.top;
-
-        // Calcular la celda superior izquierda de la pieza
-        const pieceRect = previewContainer.getBoundingClientRect();
-        const pieceX = e.clientX - pieceRect.width / 2;
-        const pieceY = e.clientY - pieceRect.height / 2;
-
-        const relativeX = pieceX - boardRect.left;
-        const relativeY = pieceY - boardRect.top;
-
-        const col = Math.round(relativeX / slotSize.width);
-        const row = Math.round(relativeY / slotSize.height);
+        const { row, col } = coords;
 
         if (canPlacePieceAt(row, col)) {
             placePiece(row, col);
@@ -516,13 +525,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleBoardMouseMove(e) {
         if (!currentPiece || !gameRunning) return;
 
-        // Mostrar y posicionar el preview
-        previewContainer.style.display = 'block';
+        const coords = getGridCoordinates(e);
+        if (!coords) return;
 
-        // Centrar el preview en el cursor
-        const previewRect = previewContainer.getBoundingClientRect();
-        previewContainer.style.left = `${e.clientX - previewRect.width / 2}px`;
-        previewContainer.style.top = `${e.clientY - previewRect.height / 2}px`;
+        const { col, row, gridStartX, gridStartY, slotWidthPlusGap, slotHeightPlusGap } = coords;
+
+        // Snap the preview to the calculated cell's top-left corner
+        const snapX = gridStartX + col * slotWidthPlusGap;
+        const snapY = gridStartY + row * slotHeightPlusGap;
+
+        previewContainer.style.display = 'block';
+        previewContainer.style.left = `${snapX}px`;
+        previewContainer.style.top = `${snapY}px`;
     }
 
     function handleBoardMouseLeave() {
