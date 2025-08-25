@@ -151,9 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 // Event listeners según el modo
-                if (gameMode === 'constructor') {
-                    slot.addEventListener('click', () => handleConstructorClick(r, c));
-                } else if (gameMode === 'espejo') {
+                if (gameMode === 'espejo') {
                     slot.addEventListener('click', () => handleEspejoClick(r, c));
                 }
                 
@@ -318,6 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Listeners para el preview flotante
         gameBoard.addEventListener('mousemove', handleBoardMouseMove);
         gameBoard.addEventListener('mouseleave', handleBoardMouseLeave);
+        gameBoard.addEventListener('click', handleConstructorClick);
     }
 
     function renderPiecePreview() {
@@ -367,9 +366,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handleConstructorClick(row, col) {
-        if (!gameRunning || !currentPiece) return;
-        
+    function handleConstructorClick(e) {
+        if (!gameRunning || !currentPiece || gameMode !== 'constructor') return;
+
+        const boardRect = gameBoard.getBoundingClientRect();
+        const slotSize = {
+            width: boardRect.width / COLS,
+            height: boardRect.height / ROWS
+        };
+
+        // Calcular la posición relativa del cursor dentro del tablero
+        const x = e.clientX - boardRect.left;
+        const y = e.clientY - boardRect.top;
+
+        // Calcular la celda superior izquierda de la pieza
+        const pieceRect = previewContainer.getBoundingClientRect();
+        const pieceX = e.clientX - pieceRect.width / 2;
+        const pieceY = e.clientY - pieceRect.height / 2;
+
+        const relativeX = pieceX - boardRect.left;
+        const relativeY = pieceY - boardRect.top;
+
+        const col = Math.round(relativeX / slotSize.width);
+        const row = Math.round(relativeY / slotSize.height);
+
         if (canPlacePieceAt(row, col)) {
             placePiece(row, col);
         }
