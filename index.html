@@ -76,10 +76,46 @@
         <div class="modal-content">
             <h2 id="end-game-title">Juego Terminado</h2>
             <p>Tu puntuación final: <span id="final-score">0</span></p>
+
+            <!-- Formulario para récord -->
+            <div id="highscore-form" style="display: none;">
+                <p>¡Nuevo récord! Ingresá tu nombre:</p>
+                <input type="text" id="player-name" placeholder="Tu nombre" maxlength="15">
+                <button id="save-score-button">Guardar</button>
+            </div>
+
             <div class="mode-buttons">
                 <button id="play-constructor">Constructor</button>
                 <button id="play-espejo">Espejo</button>
                 <button id="play-cascada">Cascada</button>
+                <button id="view-leaderboard-button" style="display: none;">Ver Leaderboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Leaderboard -->
+    <div id="leaderboard-modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Leaderboard</h2>
+            <div id="leaderboard-container">
+                <div class="leaderboard-column">
+                    <h3>🏗️ Constructor</h3>
+                    <ol id="leaderboard-constructor"></ol>
+                </div>
+                <div class="leaderboard-column">
+                    <h3>⚖️ Espejo</h3>
+                    <ol id="leaderboard-espejo"></ol>
+                </div>
+                <div class="leaderboard-column">
+                    <h3>🌊 Cascada</h3>
+                    <ol id="leaderboard-cascada"></ol>
+                </div>
+            </div>
+            <div class="mode-buttons">
+                <button id="play-constructor-from-leaderboard">Constructor</button>
+                <button id="play-espejo-from-leaderboard">Espejo</button>
+                <button id="play-cascada-from-leaderboard">Cascada</button>
+                <button id="close-leaderboard-button">Cerrar</button>
             </div>
         </div>
     </div>

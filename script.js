@@ -20,6 +20,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const endGameModal = document.getElementById('end-game-modal');
     const finalScoreElement = document.getElementById('final-score');
     const endGameTitleElement = document.getElementById('end-game-title');
+
+    // Elementos del Leaderboard
+    const highscoreForm = document.getElementById('highscore-form');
+    const playerNameInput = document.getElementById('player-name');
+    const saveScoreButton = document.getElementById('save-score-button');
+    const viewLeaderboardButton = document.getElementById('view-leaderboard-button');
+    const leaderboardModal = document.getElementById('leaderboard-modal');
+    const leaderboardConstructorList = document.getElementById('leaderboard-constructor');
+    const leaderboardEspejoList = document.getElementById('leaderboard-espejo');
+    const leaderboardCascadaList = document.getElementById('leaderboard-cascada');
+    const closeLeaderboardButton = document.getElementById('close-leaderboard-button');
     
     // Títulos de modo
     const titleConstructor = document.getElementById('title-constructor');
@@ -824,6 +835,164 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Keyboard listeners
     document.addEventListener('keydown', handleCascadaKeyboard);
+
+    // --- Lógica del Leaderboard ---
+
+    function getLeaderboard() {
+        const leaderboardJSON = localStorage.getItem('leaderboard');
+        if (leaderboardJSON) {
+            return JSON.parse(leaderboardJSON);
+        }
+        return { constructor: [], espejo: [], cascada: [] };
+    }
+
+    function saveLeaderboard(leaderboard) {
+        localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+    }
+
+    function isHighScore(score, mode) {
+        if (!mode) return false;
+        const leaderboard = getLeaderboard();
+        const modeScores = leaderboard[mode] || [];
+
+        if (modeScores.length < 10) {
+            return true;
+        }
+
+        // Comprobar si el puntaje es mayor que el más bajo en el top 10
+        return score > modeScores[modeScores.length - 1].score;
+    }
+
+    function addScore(name, score, mode) {
+        const leaderboard = getLeaderboard();
+        const modeScores = leaderboard[mode] || [];
+
+        modeScores.push({ name, score });
+        modeScores.sort((a, b) => b.score - a.score); // Ordenar de mayor a menor
+
+        leaderboard[mode] = modeScores.slice(0, 10); // Mantener solo el top 10
+
+        saveLeaderboard(leaderboard);
+    }
+
+    function renderLeaderboard() {
+        const leaderboard = getLeaderboard();
+        const lists = {
+            constructor: leaderboardConstructorList,
+            espejo: leaderboardEspejoList,
+            cascada: leaderboardCascadaList
+        };
+
+        for (const mode in lists) {
+            const listElement = lists[mode];
+            listElement.innerHTML = '';
+            const scores = leaderboard[mode] || [];
+
+            if (scores.length === 0) {
+                listElement.innerHTML = '<li>Aún no hay puntajes.</li>';
+            } else {
+                scores.forEach(entry => {
+                    const li = document.createElement('li');
+                    const nameSpan = document.createElement('span');
+                    const scoreSpan = document.createElement('span');
+
+                    nameSpan.textContent = entry.name;
+                    scoreSpan.textContent = entry.score;
+
+                    li.appendChild(nameSpan);
+                    li.appendChild(scoreSpan);
+                    listElement.appendChild(li);
+                });
+            }
+        }
+    }
+
+    function showLeaderboard() {
+        renderLeaderboard();
+        leaderboardModal.style.display = 'flex';
+    }
+
+    function hideLeaderboard() {
+        leaderboardModal.style.display = 'none';
+    }
+
+    // Modificar endGame para incluir la lógica de leaderboard
+    function endGame() {
+        gameRunning = false;
+        gamePaused = false;
+
+        if (gameMode === 'espejo') {
+            gameBoard.classList.remove('espejo-mode');
+        }
+
+        if (gameMode === 'constructor') {
+            gameBoard.removeEventListener('mousemove', handleBoardMouseMove);
+            gameBoard.removeEventListener('mouseleave', handleBoardMouseLeave);
+            previewContainer.style.display = 'none';
+        }
+
+        if (cascadaInterval) {
+            clearInterval(cascadaInterval);
+            cascadaInterval = null;
+        }
+
+        rotateButton.style.display = 'none';
+        refillButton.style.display = 'none';
+        pauseButton.style.display = 'none';
+        endButton.style.display = 'none';
+
+        const modeTitles = {
+            'constructor': 'Constructor',
+            'espejo': 'Espejo',
+            'cascada': 'Cascada'
+        };
+        endGameTitleElement.textContent = modeTitles[gameMode] || 'Juego Terminado';
+        finalScoreElement.textContent = score;
+
+        // Resetear y ocultar el formulario de récord
+        highscoreForm.style.display = 'none';
+        viewLeaderboardButton.style.display = 'none';
+        playerNameInput.value = '';
+        saveScoreButton.disabled = false;
+
+        if (isHighScore(score, gameMode)) {
+            highscoreForm.style.display = 'block';
+        }
+
+        endGameModal.style.display = 'flex';
+    }
+
+    saveScoreButton.addEventListener('click', () => {
+        const name = playerNameInput.value.trim();
+        if (name) {
+            addScore(name, score, gameMode);
+            highscoreForm.style.display = 'none';
+            viewLeaderboardButton.style.display = 'inline-block';
+            saveScoreButton.disabled = true;
+        }
+    });
+
+    viewLeaderboardButton.addEventListener('click', () => {
+        endGameModal.style.display = 'none';
+        showLeaderboard();
+    });
+
+    closeLeaderboardButton.addEventListener('click', hideLeaderboard);
+
+    // Botones para jugar de nuevo desde el leaderboard
+    document.getElementById('play-constructor-from-leaderboard').addEventListener('click', () => {
+        hideLeaderboard();
+        initConstructor();
+    });
+    document.getElementById('play-espejo-from-leaderboard').addEventListener('click', () => {
+        hideLeaderboard();
+        initEspejo();
+    });
+    document.getElementById('play-cascada-from-leaderboard').addEventListener('click', () => {
+        hideLeaderboard();
+        initCascada();
+    });
+
 
     // Inicialización
     updateUI();
