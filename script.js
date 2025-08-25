@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewContainer = document.getElementById('preview-container');
     const nextPiecePreview = document.getElementById('next-piece-preview');
     const rotateButton = document.getElementById('rotate-button');
+    const refillButton = document.getElementById('refill-button');
     const pauseButton = document.getElementById('pause-button');
     const endButton = document.getElementById('end-button');
     const welcomeModal = document.getElementById('welcome-modal');
@@ -43,6 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let previewPosition = { row: 0, col: 0 };
     
     let espejoHighlighted = [];
+    let espejoRefillsLeft = 2;
+    let discardPile = [];
     
     let cascadaInterval = null;
     let fallingCard = null;
@@ -294,6 +297,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Eliminar grupos y actualizar puntuación
         for (const group of groupsToEliminate) {
             for (const cell of group) {
+                if (gameMode === 'espejo' && cell.card) {
+                    discardPile.push(cell.card);
+                }
                 board[cell.row][cell.col] = null;
             }
             
@@ -356,9 +362,11 @@ document.addEventListener('DOMContentLoaded', () => {
         gameRunning = true;
         
         // UI
+        gameBoard.classList.remove('espejo-mode');
         energyContainer.style.display = 'none';
         previewContainer.style.display = 'block';
         rotateButton.style.display = 'inline-block';
+        refillButton.style.display = 'none';
         endButton.style.display = 'inline-block';
         
         // Generar piezas
@@ -530,11 +538,17 @@ document.addEventListener('DOMContentLoaded', () => {
         energy = 3;
         gameRunning = true;
         espejoHighlighted = [];
+        espejoRefillsLeft = 2;
+        discardPile = [];
         
         // UI
+        gameBoard.classList.add('espejo-mode');
         energyContainer.style.display = 'block';
         previewContainer.style.display = 'none';
         rotateButton.style.display = 'none';
+        refillButton.style.display = 'inline-block';
+        refillButton.disabled = false;
+        refillButton.textContent = `Rellenar (${espejoRefillsLeft})`;
         endButton.style.display = 'inline-block';
         
         updateUI();
@@ -579,6 +593,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     }
 
+    function handleRefill() {
+        if (!gameRunning || gameMode !== 'espejo' || espejoRefillsLeft <= 0 || discardPile.length === 0) {
+            return;
+        }
+
+        espejoRefillsLeft--;
+
+        const emptySlots = [];
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (!board[r][c]) {
+                    emptySlots.push({ r, c });
+                }
+            }
+        }
+
+        const shuffledPile = shuffle(discardPile);
+        let filledCount = 0;
+
+        for (const slot of emptySlots) {
+            if (shuffledPile.length === 0) break;
+
+            const { r, c } = slot;
+            let bestCard = null;
+            let bestCardIndex = -1;
+
+            // Find a card from the discard pile that doesn't create a group
+            for (let i = 0; i < shuffledPile.length; i++) {
+                const potentialCard = shuffledPile[i];
+                const groupSize = getPotentialGroupSize(r, c, potentialCard.suit);
+                if (groupSize < 3) {
+                    bestCard = potentialCard;
+                    bestCardIndex = i;
+                    break;
+                }
+            }
+
+            // If all cards create a group, just pick one (the last one)
+            if (!bestCard) {
+                bestCard = shuffledPile[shuffledPile.length - 1];
+                bestCardIndex = shuffledPile.length - 1;
+            }
+
+            board[r][c] = bestCard;
+            shuffledPile.splice(bestCardIndex, 1); // Remove card from pile
+            filledCount++;
+        }
+
+        // Update the discard pile with the remaining unused cards
+        discardPile = shuffledPile;
+
+        // Update button state
+        refillButton.textContent = `Rellenar (${espejoRefillsLeft})`;
+        if (espejoRefillsLeft <= 0) {
+            refillButton.disabled = true;
+        }
+
+        renderBoard();
+        updateUI();
+    }
+
     // Modo Cascada
     function initCascada() {
         gameMode = 'cascada';
@@ -589,9 +664,11 @@ document.addEventListener('DOMContentLoaded', () => {
         cascadaDeck = shuffle(createDeck());
         
         // UI
+        gameBoard.classList.remove('espejo-mode');
         energyContainer.style.display = 'none';
         previewContainer.style.display = 'none';
         rotateButton.style.display = 'none';
+        refillButton.style.display = 'none';
         pauseButton.style.display = 'inline-block';
         endButton.style.display = 'inline-block';
         
@@ -659,6 +736,10 @@ document.addEventListener('DOMContentLoaded', () => {
         gameRunning = false;
         gamePaused = false;
 
+        if (gameMode === 'espejo') {
+            gameBoard.classList.remove('espejo-mode');
+        }
+
         if (gameMode === 'constructor') {
             gameBoard.removeEventListener('mousemove', handleBoardMouseMove);
             gameBoard.removeEventListener('mouseleave', handleBoardMouseLeave);
@@ -672,6 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Ocultar controles específicos
         rotateButton.style.display = 'none';
+        refillButton.style.display = 'none';
         pauseButton.style.display = 'none';
         endButton.style.display = 'none';
         
@@ -719,6 +801,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     rotateButton.addEventListener('click', handleRotate);
+    refillButton.addEventListener('click', handleRefill);
     pauseButton.addEventListener('click', togglePause);
     endButton.addEventListener('click', endGame);
 
