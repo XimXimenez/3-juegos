@@ -103,6 +103,63 @@ document.addEventListener('DOMContentLoaded', () => {
         board = Array(ROWS).fill(null).map(() => Array(COLS).fill(null));
     }
 
+    function getPotentialGroupSize(r, c, suit) {
+        // Temporarily place card
+        const originalCard = board[r][c];
+        board[r][c] = { suit: suit, rank: 'temp' };
+
+        const group = findConnectedGroup(r, c, new Set());
+
+        // Revert board change
+        board[r][c] = originalCard;
+
+        return group.length;
+    }
+
+    function fillBoardForEspejo() {
+        clearBoard();
+        const deck = shuffle(createDeck());
+
+        const positions = [];
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                positions.push({ r, c });
+            }
+        }
+        shuffle(positions);
+
+        for (const pos of positions) {
+            const { r, c } = pos;
+
+            const validSuits = [];
+            const groupSizes = [];
+
+            for (const suit of SUITS) {
+                const groupSize = getPotentialGroupSize(r, c, suit);
+                if (groupSize < 3) {
+                    validSuits.push(suit);
+                }
+                groupSizes.push({ suit, size: groupSize });
+            }
+
+            let bestSuit;
+            if (validSuits.length > 0) {
+                // If there are suits that don't form a group, pick one randomly.
+                bestSuit = validSuits[Math.floor(Math.random() * validSuits.length)];
+            } else {
+                // If all suits form a group, pick the one that forms the smallest group.
+                groupSizes.sort((a, b) => a.size - b.size);
+                const minSize = groupSizes[0].size;
+                const bestOptions = groupSizes.filter(item => item.size === minSize);
+                bestSuit = bestOptions[Math.floor(Math.random() * bestOptions.length)].suit;
+            }
+
+            // Place the card for real.
+            const cardFromDeck = deck.pop();
+            board[r][c] = { suit: bestSuit, rank: cardFromDeck.rank };
+        }
+    }
+
     function fillBoardRandom() {
         const deck = shuffle(createDeck());
         let cardIndex = 0;
@@ -468,7 +525,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modo Espejo
     function initEspejo() {
         gameMode = 'espejo';
-        fillBoardRandom();
+        fillBoardForEspejo();
         score = 0;
         energy = 3;
         gameRunning = true;
