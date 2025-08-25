@@ -314,30 +314,55 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPiecePreview();
         renderBoard();
         updateUI();
+
+        // Listeners para el preview flotante
+        gameBoard.addEventListener('mousemove', handleBoardMouseMove);
+        gameBoard.addEventListener('mouseleave', handleBoardMouseLeave);
     }
 
     function renderPiecePreview() {
-        if (!nextPiece) return;
-        
+        if (!currentPiece) {
+            previewContainer.style.display = 'none';
+            return;
+        }
+
         nextPiecePreview.innerHTML = '';
-        const shape = nextPiece.shape;
-        
-        nextPiecePreview.style.gridTemplateColumns = `repeat(${Math.max(...shape.map(row => row.length))}, 30px)`;
-        nextPiecePreview.style.gridTemplateRows = `repeat(${shape.length}, 42px)`;
-        
+        const shape = currentPiece.shape;
+        const cardWidth = 80;
+        const cardHeight = 120;
+
+        const pieceWidth = Math.max(...shape.map(row => row.length));
+        const pieceHeight = shape.length;
+
+        nextPiecePreview.style.gridTemplateColumns = `repeat(${pieceWidth}, ${cardWidth}px)`;
+        nextPiecePreview.style.gridTemplateRows = `repeat(${pieceHeight}, ${cardHeight}px)`;
+
+        // Crear un mapa de la pieza para facilitar la renderización
+        const pieceMap = Array(pieceHeight).fill(0).map(() => Array(pieceWidth).fill(null));
+        let cardIdx = 0;
         for (let r = 0; r < shape.length; r++) {
             for (let c = 0; c < shape[r].length; c++) {
-                const cardIndex = shape[r][c];
-                const card = nextPiece.cards[cardIndex];
-                
-                const img = document.createElement('img');
-                img.src = `images/${card.rank}${card.suit}.png`;
-                img.alt = `${card.rank} of ${card.suit}`;
-                img.style.width = '30px';
-                img.style.height = '42px';
-                img.style.objectFit = 'contain';
-                
-                nextPiecePreview.appendChild(img);
+                pieceMap[r][c] = currentPiece.cards[cardIdx++];
+            }
+        }
+
+        for (let r = 0; r < pieceHeight; r++) {
+            for (let c = 0; c < pieceWidth; c++) {
+                const card = pieceMap[r][c];
+                if (card) {
+                    const img = document.createElement('img');
+                    img.src = `images/${card.rank}${card.suit}.png`;
+                    img.alt = `${card.rank} of ${card.suit}`;
+                    img.style.width = `${cardWidth}px`;
+                    img.style.height = `${cardHeight}px`;
+                    img.style.objectFit = 'contain';
+                    img.classList.add('card-image');
+                    nextPiecePreview.appendChild(img);
+                } else {
+                    // Espacio vacío para piezas no rectangulares (aunque las actuales lo son)
+                    const emptySlot = document.createElement('div');
+                    nextPiecePreview.appendChild(emptySlot);
+                }
             }
         }
     }
@@ -398,8 +423,26 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleRotate() {
         if (currentPiece && gameRunning) {
             rotatePiece(currentPiece);
+            renderPiecePreview();
             renderBoard();
         }
+    }
+
+    function handleBoardMouseMove(e) {
+        if (!currentPiece || !gameRunning) return;
+
+        // Mostrar y posicionar el preview
+        previewContainer.style.display = 'block';
+
+        // Centrar el preview en el cursor
+        const previewRect = previewContainer.getBoundingClientRect();
+        previewContainer.style.left = `${e.clientX - previewRect.width / 2}px`;
+        previewContainer.style.top = `${e.clientY - previewRect.height / 2}px`;
+    }
+
+    function handleBoardMouseLeave() {
+        if (!gameRunning) return;
+        previewContainer.style.display = 'none';
     }
 
     // Modo Espejo
@@ -538,6 +581,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function endGame() {
         gameRunning = false;
         gamePaused = false;
+
+        if (gameMode === 'constructor') {
+            gameBoard.removeEventListener('mousemove', handleBoardMouseMove);
+            gameBoard.removeEventListener('mouseleave', handleBoardMouseLeave);
+            previewContainer.style.display = 'none';
+        }
         
         if (cascadaInterval) {
             clearInterval(cascadaInterval);

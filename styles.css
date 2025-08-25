@@ -59,10 +59,11 @@ h1 {
 }
 
 #preview-container {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 10px;
-    min-height: 60px;
+    display: none; /* Oculto por defecto */
+    position: absolute;
+    z-index: 100;
+    pointer-events: none; /* Para que no interfiera con el cursor */
+    min-height: auto;
 }
 
 #next-piece-preview {
