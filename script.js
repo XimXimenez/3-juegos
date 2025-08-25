@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const welcomeModal = document.getElementById('welcome-modal');
     const endGameModal = document.getElementById('end-game-modal');
     const finalScoreElement = document.getElementById('final-score');
+    const endGameTitleElement = document.getElementById('end-game-title');
     
     // Títulos de modo
     const titleConstructor = document.getElementById('title-constructor');
@@ -768,6 +769,12 @@ document.addEventListener('DOMContentLoaded', () => {
         endButton.style.display = 'none';
         
         // Mostrar modal de fin
+        const modeTitles = {
+            'constructor': 'Constructor',
+            'espejo': 'Espejo',
+            'cascada': 'Cascada'
+        };
+        endGameTitleElement.textContent = modeTitles[gameMode] || 'Juego Terminado';
         finalScoreElement.textContent = score;
         endGameModal.style.display = 'flex';
     }
