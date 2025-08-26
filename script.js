@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Agregar clases especiales según el modo
                 if (gameMode === 'espejo' && isHighlighted(r, c)) {
-                    slot.classList.add('highlight');
+                    slot.classList.add('shadow-highlight');
                 }
                 
                 const card = board[r][c];
@@ -221,6 +221,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Event listeners según el modo
                 if (gameMode === 'espejo') {
                     slot.addEventListener('click', () => handleEspejoClick(r, c));
+                    slot.addEventListener('mouseover', () => handleEspejoMouseOver(r, c));
+                    slot.addEventListener('mouseout', () => handleEspejoMouseOut());
                 }
                 
                 gameBoard.appendChild(slot);
@@ -489,6 +491,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
+        // Aplicar gravedad para que la pieza caiga
+        applyGravity();
+
         // Avanzar a la siguiente pieza
         currentPiece = nextPiece;
         nextPiece = createPiece(Math.random() < 0.5 ? 'trio' : 'quad');
@@ -574,6 +579,34 @@ document.addEventListener('DOMContentLoaded', () => {
         endButton.style.display = 'inline-block';
         
         updateUI();
+        renderBoard();
+    }
+
+    function handleEspejoMouseOver(row, col) {
+        if (!gameRunning || gameMode !== 'espejo') return;
+
+        espejoHighlighted = [];
+        let mirrorCol;
+        if (col < 4) {
+            mirrorCol = col + 4;
+        } else {
+            mirrorCol = col - 4;
+        }
+
+        if (board[row][col]) {
+            espejoHighlighted.push({ row, col });
+        }
+        if (board[row][mirrorCol]) {
+            espejoHighlighted.push({ row, col: mirrorCol });
+        }
+
+        renderBoard();
+    }
+
+    function handleEspejoMouseOut() {
+        if (!gameRunning || gameMode !== 'espejo') return;
+
+        espejoHighlighted = [];
         renderBoard();
     }
 
