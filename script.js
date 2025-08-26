@@ -112,8 +112,13 @@ document.addEventListener('DOMContentLoaded', () => {
             } else { // Horizontal -> Vertical
                 piece.shape = [[0], [1], [2]];
             }
+        } else if (piece.type === 'quad') {
+            // Rotar las cartas en sentido horario:
+            // 0 1   ->   2 0
+            // 2 3   ->   3 1
+            const cards = piece.cards;
+            piece.cards = [cards[2], cards[0], cards[3], cards[1]];
         }
-        // Los cuadrados no necesitan rotación
     }
 
     function clearBoard() {
