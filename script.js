@@ -757,6 +757,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return false;
         }
 
+        fallingColumn = 4;
         fallingCard = cascadaDeck.shift();
 
         fallingCardContainer.innerHTML = '';
@@ -804,7 +805,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function cascadaGameStep() {
         if (!gameRunning || gamePaused) return;
         if (spawnNewCard()) {
-            cascadaTimeoutId = setTimeout(dropNextCard, 2500);
+            dropNextCard();
         }
     }
 
@@ -853,7 +854,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const gameContainerRect = document.getElementById('game-container').getBoundingClientRect();
         const gameBoardOffsetLeft = gameBoardRect.left - gameContainerRect.left;
         
-        const left = gameBoardOffsetLeft + fallingColumn * (cardWidth + gap);
+        const left = gameBoardOffsetLeft + fallingColumn * (cardWidth + gap) + 320;
         const top = gameBoard.offsetTop - firstSlotRect.height - 5;
 
         fallingCardContainer.style.left = `${left}px`;
