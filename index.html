@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Naipes</title>
+    <title>3 Juegos de Naipes</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="game-container">
         <header>
-            <h1>Juego de Naipes</h1>
+            <h1>3 Juegos de Naipes</h1>
             <div id="game-info">
                 <div id="energy-container" style="display: none;">
                     Energía: <span id="energy">3</span>
@@ -37,34 +37,34 @@
     <!-- Modal de Bienvenida -->
     <div id="welcome-modal">
         <div class="modal-content">
-            <h1>Juego de Naipes</h1>
-            <p><em>Tres modos diferentes para disfrutar</em></p>
+            <h1>3 Juegos de Naipes</h1>
             
             <div class="game-modes">
                 <div class="mode-section">
-                    <h3 id="title-constructor">🏗️ Constructor</h3>
+                    <h3 id="title-constructor">Constructor</h3>
                     <p>
-                        Piezas de cartas caen desde arriba (grupos de 3 o rectángulos de 4).
-                        Podés rotarlas antes de colocarlas. Formá grupos de 3 o más cartas 
-                        vecinas del mismo palo para eliminarlas y ganar puntos.
+                        Colocá en el tablero los grupos de naipes que aparecen.
+                        Podés rotarlos antes de colocarlos. Formá grupos de 3 o más naipes 
+                        vecinos del mismo palo para eliminarlos y ganar puntos.
                     </p>
                 </div>
 
                 <div class="mode-section">
-                    <h3 id="title-espejo">⚖️ Espejo</h3>
+                    <h3 id="title-espejo">Espejo</h3>
                     <p>
-                        El tablero empieza lleno. Intercambiá cartas entre posiciones espejo 
-                        (izquierda con derecha). Cada intercambio cuesta 1 energía. 
-                        Los grupos de 3+ del mismo palo se eliminan solos y restauran energía.
+                        El tablero empieza lleno. Intercambiá naipes entre la mitad izquierda y la mitad 
+                        derecha. Cada intercambio cuesta 1 energía. Los grupos de 3 o más vecinos del 
+						mismo palo se eliminan solos y restauran energía.
+						Podés volver a rellenar el tablero dos veces.
                     </p>
                 </div>
 
                 <div class="mode-section">
-                    <h3 id="title-cascada">🌊 Cascada</h3>
+                    <h3 id="title-cascada">Cascada</h3>
                     <p>
-                        Las cartas caen de una en una desde el centro. Usá las flechas ←→ 
-                        para dirigirlas a la columna que prefieras. Formá grupos vecinos 
-                        del mismo palo para eliminarlos en reacciones en cadena.
+                        Las cartas caen de una en una por el centro. Hacé click en la columna donde 
+						quieras que caiga. Cuando dos naipes del mismo número se tocan, desaparecen.
+						El juego termina cuando una columna se llena o cuando agotaste todas las cartas del mazo.
                     </p>
                 </div>
             </div>
@@ -76,7 +76,7 @@
         <div class="modal-content">
             <h2 id="end-game-title">Juego Terminado</h2>
             <p>Tu puntuación final: <span id="final-score">0</span></p>
-
+            
             <!-- Formulario para récord -->
             <div id="highscore-form" style="display: none;">
                 <p>¡Nuevo récord! Ingresá tu nombre:</p>
@@ -99,15 +99,15 @@
             <h2>Leaderboard</h2>
             <div id="leaderboard-container">
                 <div class="leaderboard-column">
-                    <h3>🏗️ Constructor</h3>
+                    <h3>Constructor</h3>
                     <ol id="leaderboard-constructor"></ol>
                 </div>
                 <div class="leaderboard-column">
-                    <h3>⚖️ Espejo</h3>
+                    <h3>Espejo</h3>
                     <ol id="leaderboard-espejo"></ol>
                 </div>
                 <div class="leaderboard-column">
-                    <h3>🌊 Cascada</h3>
+                    <h3>Cascada</h3>
                     <ol id="leaderboard-cascada"></ol>
                 </div>
             </div>
