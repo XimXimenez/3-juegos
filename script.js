@@ -586,17 +586,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!gameRunning || gameMode !== 'espejo') return;
 
         espejoHighlighted = [];
-        let mirrorCol;
-        if (col < 4) {
-            mirrorCol = col + 4;
-        } else {
-            mirrorCol = col - 4;
-        }
+        const card = board[row][col];
 
-        if (board[row][col]) {
+        if (card) {
+            // Destacar la carta sobre la que se pasa el cursor
             espejoHighlighted.push({ row, col });
-        }
-        if (board[row][mirrorCol]) {
+
+            // Destacar la posición espejo, esté vacía o no
+            let mirrorCol;
+            if (col < 4) {
+                mirrorCol = col + 4;
+            } else {
+                mirrorCol = col - 4;
+            }
             espejoHighlighted.push({ row, col: mirrorCol });
         }
 
@@ -612,10 +614,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleEspejoClick(row, col) {
         if (!gameRunning || energy <= 0) return;
-        
+
         const card = board[row][col];
-        if (!card) return;
-        
+        if (!card) return; // Solo se puede iniciar desde una carta
+
         // Encontrar la posición espejo
         let mirrorCol;
         if (col < 4) {
@@ -623,24 +625,26 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             mirrorCol = col - 4;
         }
-        
+
         const mirrorCard = board[row][mirrorCol];
-        if (!mirrorCard) return;
-        
-        // Realizar intercambio
+
+        // Realizar intercambio (funciona incluso si mirrorCard es null)
         board[row][col] = mirrorCard;
         board[row][mirrorCol] = card;
-        
+
         energy -= 1;
-        
+
+        // Aplicar gravedad para que la carta "caiga" si es necesario
+        applyGravity();
+
         renderBoard();
         updateUI();
-        
-        // Eliminar grupos
+
+        // Eliminar grupos después de la caída
         setTimeout(() => {
             eliminateGroups();
             renderBoard();
-            
+
             // Verificar game over
             if (energy <= 0) {
                 endGame();
