@@ -60,9 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let discardPile = [];
     
     let cascadaInterval = null;
-    let fallingCard = null;
+    let fallingCard = null; // This will hold the card data for the falling/preview card
     let fallingColumn = 4;
     let cascadaDeck = [];
+    let cascadaTimeoutId = null;
+    let fallingCardContainer = null; // The DOM element for the preview/falling card
 
     // Funciones auxiliares
     function createDeck() {
@@ -274,7 +276,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (newRow >= 0 && newRow < ROWS && newCol >= 0 && newCol < COLS) {
                 const neighborCard = board[newRow][newCol];
-                if (neighborCard && neighborCard.suit === card.suit) {
+
+                // Condición de match según el modo de juego
+                const isMatch = gameMode === 'cascada'
+                    ? neighborCard && neighborCard.rank === card.rank
+                    : neighborCard && neighborCard.suit === card.suit;
+
+                if (isMatch) {
                     const newKey = `${newRow},${newCol}`;
                     if (!visited.has(newKey)) {
                         group.push(...findConnectedGroup(newRow, newCol, visited));
@@ -286,25 +294,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return group;
     }
 
-    function eliminateGroups() {
+    function eliminateGroups(onCompleteCallback) {
         const visited = new Set();
         const groupsToEliminate = [];
         let totalEliminated = 0;
-        
+
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
                 const key = `${r},${c}`;
                 if (board[r][c] && !visited.has(key)) {
                     const group = findConnectedGroup(r, c, visited);
-                    if (group.length >= 3) {
+                    const minGroupSize = gameMode === 'cascada' ? 2 : 3;
+                    if (group.length >= minGroupSize) {
                         groupsToEliminate.push(group);
                         totalEliminated += group.length;
                     }
                 }
             }
         }
-        
-        // Eliminar grupos y actualizar puntuación
+
+        if (totalEliminated === 0) {
+            if (onCompleteCallback) onCompleteCallback();
+            return false;
+        }
+
         for (const group of groupsToEliminate) {
             for (const cell of group) {
                 if (gameMode === 'espejo' && cell.card) {
@@ -312,33 +325,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 board[cell.row][cell.col] = null;
             }
-            
-            // Puntuación: 3 cartas = 3 puntos, 4 cartas = 6 puntos, 5 cartas = 10 puntos, etc.
+
             const groupScore = group.length * (group.length - 1) / 2 + group.length;
             score += groupScore;
-            
-            // Restaurar energía en modo espejo
+
             if (gameMode === 'espejo') {
-                energy += group.length - 1; // 3 cartas = +2, 4 cartas = +3, etc.
+                energy += group.length - 1;
             }
         }
-        
-        // Aplicar gravedad si hay eliminaciones
-        if (totalEliminated > 0) {
-            applyGravity();
-            updateUI();
-            
-            // Verificar chain reactions
-            setTimeout(() => {
-                if (eliminateGroups()) {
-                    renderBoard();
-                }
-            }, 300);
-            
-            return true;
-        }
-        
-        return false;
+
+        applyGravity();
+        updateUI();
+        renderBoard(); // Render after gravity
+
+        setTimeout(() => {
+            // Pass the callback to the recursive call to handle chain reactions
+            eliminateGroups(onCompleteCallback);
+        }, 300);
+
+        return true;
     }
 
     function applyGravity() {
@@ -714,6 +719,95 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Modo Cascada
+
+    function handleCardLanding() {
+        // The transitionend event can fire for multiple properties.
+        // We only want to run this logic once per drop.
+        if (!fallingCard || !gameRunning) return;
+
+        let targetRow = -1;
+        for (let r = ROWS - 1; r >= 0; r--) {
+            if (board[r][fallingColumn] === null) {
+                targetRow = r;
+                break;
+            }
+        }
+
+        if (targetRow === -1) {
+            endGame();
+            return;
+        }
+
+        board[targetRow][fallingColumn] = fallingCard;
+        fallingCardContainer.style.display = 'none';
+        fallingCard = null; // Important: signal that the card has landed.
+
+        renderBoard();
+
+        eliminateGroups(() => {
+            if (gameRunning) {
+                cascadaGameStep();
+            }
+        });
+    }
+
+    function spawnNewCard() {
+        if (cascadaDeck.length === 0) {
+            if (!fallingCard) endGame();
+            return false;
+        }
+
+        fallingCard = cascadaDeck.shift();
+
+        fallingCardContainer.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = `images/${fallingCard.rank}${fallingCard.suit}.png`;
+        img.alt = `${fallingCard.rank} of ${fallingCard.suit}`;
+        img.classList.add('card-image');
+        fallingCardContainer.appendChild(img);
+
+        fallingCardContainer.style.transition = 'none';
+        fallingCardContainer.style.display = 'block';
+        updateFallingCardPreviewPosition();
+        return true;
+    }
+
+    function dropNextCard() {
+        if (!fallingCard || !gameRunning) return;
+
+        let targetRow = -1;
+        for (let r = ROWS - 1; r >= 0; r--) {
+            if (board[r][fallingColumn] === null) {
+                targetRow = r;
+                break;
+            }
+        }
+
+        if (targetRow === -1) {
+            endGame();
+            return;
+        }
+
+        const firstSlotRect = gameBoard.querySelector('.card-slot').getBoundingClientRect();
+        const gameBoardRect = gameBoard.getBoundingClientRect();
+        const cardHeight = firstSlotRect.height;
+        const gapY = (gameBoardRect.height - (ROWS * cardHeight)) / (ROWS - 1);
+        const top = gameBoard.offsetTop + targetRow * (cardHeight + gapY);
+
+        // A short delay ensures the 'left' position is set before the transition starts
+        setTimeout(() => {
+            fallingCardContainer.style.transition = 'top 2.0s ease-in, left 0.2s ease-out';
+            fallingCardContainer.style.top = `${top}px`;
+        }, 50);
+    }
+
+    function cascadaGameStep() {
+        if (!gameRunning || gamePaused) return;
+        if (spawnNewCard()) {
+            cascadaTimeoutId = setTimeout(dropNextCard, 2500);
+        }
+    }
+
     function initCascada() {
         gameMode = 'cascada';
         clearBoard();
@@ -722,6 +816,13 @@ document.addEventListener('DOMContentLoaded', () => {
         fallingColumn = 4;
         cascadaDeck = shuffle(createDeck());
         
+        if (!fallingCardContainer) {
+            fallingCardContainer = document.createElement('div');
+            fallingCardContainer.className = 'cascada-falling-card';
+            document.getElementById('game-container').appendChild(fallingCardContainer);
+            fallingCardContainer.addEventListener('transitionend', handleCardLanding);
+        }
+
         // UI
         gameBoard.classList.remove('espejo-mode');
         energyContainer.style.display = 'none';
@@ -734,60 +835,45 @@ document.addEventListener('DOMContentLoaded', () => {
         updateUI();
         renderBoard();
         
+        gameBoard.addEventListener('click', handleCascadaClick);
+
         // Iniciar caída de cartas
         startCascada();
     }
 
+    function updateFallingCardPreviewPosition() {
+        if (!fallingCardContainer || !gameBoard.querySelector('.card-slot')) return;
+
+        const firstSlotRect = gameBoard.querySelector('.card-slot').getBoundingClientRect();
+        const gameBoardRect = gameBoard.getBoundingClientRect();
+        
+        const cardWidth = firstSlotRect.width;
+        const gap = (gameBoardRect.width - (COLS * cardWidth)) / (COLS - 1);
+
+        const gameContainerRect = document.getElementById('game-container').getBoundingClientRect();
+        const gameBoardOffsetLeft = gameBoardRect.left - gameContainerRect.left;
+        
+        const left = gameBoardOffsetLeft + fallingColumn * (cardWidth + gap);
+        const top = gameBoard.offsetTop - firstSlotRect.height - 5;
+
+        fallingCardContainer.style.left = `${left}px`;
+        fallingCardContainer.style.top = `${top}px`;
+    }
+
+    function handleCascadaClick(event) {
+        if (!gameRunning || gameMode !== 'cascada' || gamePaused || !fallingCard) return;
+
+        const coords = getGridCoordinates(event);
+        if (!coords) return;
+
+        const { col } = coords;
+        fallingColumn = col;
+        
+        updateFallingCardPreviewPosition();
+    }
+
     function startCascada() {
-        cascadaInterval = setInterval(() => {
-            if (gameRunning && !gamePaused && cascadaDeck.length > 0) {
-                dropNextCard();
-            } else if (cascadaDeck.length === 0) {
-                endGame();
-            }
-        }, 2500);
-    }
-
-    function dropNextCard() {
-        if (cascadaDeck.length === 0) return;
-        
-        const card = cascadaDeck.shift();
-        
-        // Encontrar la posición más baja disponible en la columna
-        let targetRow = -1;
-        for (let r = ROWS - 1; r >= 0; r--) {
-            if (board[r][fallingColumn] === null) {
-                targetRow = r;
-                break;
-            }
-        }
-        
-        if (targetRow === -1) {
-            // Columna llena, game over
-            endGame();
-            return;
-        }
-        
-        // Colocar la carta
-        board[targetRow][fallingColumn] = card;
-        
-        renderBoard();
-        
-        // Eliminar grupos
-        setTimeout(() => {
-            eliminateGroups();
-            renderBoard();
-        }, 100);
-    }
-
-    function handleCascadaKeyboard(event) {
-        if (!gameRunning || gameMode !== 'cascada') return;
-        
-        if (event.key === 'ArrowLeft' && fallingColumn > 0) {
-            fallingColumn--;
-        } else if (event.key === 'ArrowRight' && fallingColumn < COLS - 1) {
-            fallingColumn++;
-        }
+        cascadaGameStep();
     }
 
     // Gestión del juego
@@ -804,10 +890,22 @@ document.addEventListener('DOMContentLoaded', () => {
             gameBoard.removeEventListener('mouseleave', handleBoardMouseLeave);
             previewContainer.style.display = 'none';
         }
+
+        if (gameMode === 'cascada') {
+            gameBoard.removeEventListener('click', handleCascadaClick);
+            if (fallingCardContainer) {
+                fallingCardContainer.style.display = 'none';
+            }
+            fallingCard = null;
+        }
         
-        if (cascadaInterval) {
+        if (cascadaInterval) { // Keep this for safety, though it should be unused
             clearInterval(cascadaInterval);
             cascadaInterval = null;
+        }
+        if (cascadaTimeoutId) {
+            clearTimeout(cascadaTimeoutId);
+            cascadaTimeoutId = null;
         }
         
         // Ocultar controles específicos
@@ -869,9 +967,6 @@ document.addEventListener('DOMContentLoaded', () => {
     refillButton.addEventListener('click', handleRefill);
     pauseButton.addEventListener('click', togglePause);
     endButton.addEventListener('click', endGame);
-
-    // Keyboard listeners
-    document.addEventListener('keydown', handleCascadaKeyboard);
 
     // --- Lógica del Leaderboard ---
 
