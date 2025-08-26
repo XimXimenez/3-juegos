@@ -402,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameBoard.addEventListener('mousemove', handleBoardMouseMove);
         gameBoard.addEventListener('mouseleave', handleBoardMouseLeave);
         gameBoard.addEventListener('click', handleConstructorClick);
+        gameBoard.addEventListener('contextmenu', handleRightClick);
     }
 
     function renderPiecePreview() {
@@ -543,6 +544,11 @@ document.addEventListener('DOMContentLoaded', () => {
             renderPiecePreview();
             renderBoard();
         }
+    }
+
+    function handleRightClick(e) {
+        e.preventDefault();
+        handleRotate();
     }
 
     function handleBoardMouseMove(e) {
@@ -894,6 +900,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (gameMode === 'constructor') {
             gameBoard.removeEventListener('mousemove', handleBoardMouseMove);
             gameBoard.removeEventListener('mouseleave', handleBoardMouseLeave);
+            gameBoard.removeEventListener('click', handleConstructorClick);
+            gameBoard.removeEventListener('contextmenu', handleRightClick);
             previewContainer.style.display = 'none';
         }
 
